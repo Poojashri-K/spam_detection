@@ -2,14 +2,26 @@ import re
 from pathlib import Path
 
 import joblib
+from scipy.sparse import hstack
 from severity import analyze_severity
 
 
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"http\S+|www\S+", " URL ", text)
-    text = re.sub(r"\d+", " NUMBER ", text)
-    text = re.sub(r"[^a-zA-Z\s]", " ", text)
+    text = re.sub(r"(?<![@\w])(?:[a-z0-9-]+\.)+[a-z]{2,}\b", " URL ", text)
+
+    def normalize_number(match):
+        preceding_word = re.search(
+            r"([a-zA-Z]+)[^a-zA-Z0-9_]*$",
+            text[:match.start()],
+        )
+        if preceding_word:
+            return f" number_{preceding_word.group(1)} "
+        return " number "
+
+    text = re.sub(r"\d+(?:[.,:/-]\d+)*", normalize_number, text)
+    text = re.sub(r"[^a-zA-Z_\s]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
 
     return text
@@ -18,13 +30,16 @@ def clean_text(text):
 def predict_message(message):
     models_dir = Path(__file__).resolve().parent / "models"
     svm_model = joblib.load(models_dir / "svm_model.pkl")
-    vectorizer = joblib.load(models_dir / "tfidf_vectorizer.pkl")
+    word_vectorizer = joblib.load(models_dir / "word_tfidf_vectorizer.pkl")
+    char_vectorizer = joblib.load(models_dir / "char_tfidf_vectorizer.pkl")
 
     cleaned_message = clean_text(message)
-    message_features = vectorizer.transform([cleaned_message])
+    word_features = word_vectorizer.transform([cleaned_message])
+    char_features = char_vectorizer.transform([cleaned_message])
+    message_features = hstack([word_features, char_features], format="csr")
     prediction = svm_model.predict(message_features)[0]
 
-    return "spam" if prediction == 1 else "ham"
+    return prediction, svm_model, message_features
 
 
 def identify_features(message):
@@ -63,20 +78,17 @@ def identify_features(message):
 
 
 def analyze_message(message):
-    prediction = predict_message(message)
+    predicted_class, svm_model, message_features = predict_message(message)
     severity_result = analyze_severity(message)
     features = identify_features(message)
 
-    svm_model = joblib.load(Path(__file__).resolve().parent / "models" / "svm_model.pkl")
     if not hasattr(svm_model, "predict_proba"):
         raise RuntimeError(
             "The saved SVM model does not support probability estimates. "
             "Train and save it with SVC(probability=True) to enable confidence."
         )
 
-    vectorizer = joblib.load(Path(__file__).resolve().parent / "models" / "tfidf_vectorizer.pkl")
-    message_features = vectorizer.transform([clean_text(message)])
-    predicted_class = 1 if prediction == "spam" else 0
+    prediction = "spam" if predicted_class == 1 else "ham"
     class_index = list(svm_model.classes_).index(predicted_class)
     confidence = round(float(svm_model.predict_proba(message_features)[0][class_index]) * 100, 2)
 
@@ -86,6 +98,7 @@ def analyze_message(message):
         "reasons": severity_result["reasons"],
         "features": features,
         "confidence": confidence,
+        "model": "SVM",
     }
 
 

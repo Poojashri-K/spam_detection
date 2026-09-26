@@ -24,7 +24,13 @@ def analyze():
     if not isinstance(message, str) or not message.strip():
         return jsonify({"error": "A non-empty message is required."}), 400
 
-    return jsonify(analyze_message(message))
+    try:
+        result = analyze_message(message)
+    except Exception as error:
+        app.logger.exception("Message analysis failed")
+        return jsonify({"error": str(error)}), 500
+
+    return jsonify(result)
 
 
 @app.get("/api/metrics")

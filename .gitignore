@@ -2,7 +2,14 @@ backend/venv/
 **/__pycache__/
 *.pyc
 backend/models/*.pkl
+!backend/models/svm_model.pkl
+!backend/models/word_tfidf_vectorizer.pkl
+!backend/models/char_tfidf_vectorizer.pkl
 backend/data/SMSSpamCollection
+backend/data/Dataset_5971.csv
+backend/data/indian-payment-sms-dataset.txt
+backend/data/scam_hum_india.csv
+backend/data/spam_ham_india.txt
 frontend/node_modules/
 frontend/dist/
 .env

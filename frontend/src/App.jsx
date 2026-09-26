@@ -48,7 +48,12 @@ function App() {
         body: JSON.stringify({ message }),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error('The analysis service returned an invalid response. Please check that the backend is running and try again.')
+      }
       if (!response.ok) {
         throw new Error(data.error || 'The message could not be analyzed.')
       }
@@ -162,7 +167,7 @@ function App() {
                 <span className="confidence-value">
                   Confidence: {Number(analysis.confidence).toFixed(2)}%
                 </span>
-                <span className="model-used">Model used: SVM</span>
+                <span className="model-used">Model used: {analysis.model || 'SVM'}</span>
               </div>
               <div className="reason-list">
                 <h3>Explanation / Reasons</h3>
