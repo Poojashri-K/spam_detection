@@ -1,0 +1,9 @@
+backend/venv/
+**/__pycache__/
+*.pyc
+backend/models/*.pkl
+backend/data/SMSSpamCollection
+frontend/node_modules/
+frontend/dist/
+.env
+.env.*
