@@ -1,351 +1,441 @@
-import { useEffect, useState } from 'react'
+import { Link, NavLink, Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
 import './App.css'
+import AnalyzePage from './pages/AnalyzePage.jsx'
 
-function App() {
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [analysis, setAnalysis] = useState(null)
-  const [metrics, setMetrics] = useState([])
-  const [metricsLoading, setMetricsLoading] = useState(true)
-  const [metricsError, setMetricsError] = useState('')
-  const [expandedDetails, setExpandedDetails] = useState({})
+const stats = [
+  { value: '3', label: 'ML Models', accent: 'blue' },
+  { value: '20K', label: 'Combined TF-IDF Features', accent: 'purple' },
+  { value: '98.60%', label: 'SVM Accuracy', accent: 'cyan' },
+  { value: '97.12%', label: 'SVM F1 Score', accent: 'orange' },
+]
 
-  useEffect(() => {
-    async function loadMetrics() {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/api/metrics')
-        if (!response.ok) {
-          throw new Error('Model performance data is currently unavailable.')
-        }
-        const data = await response.json()
-        setMetrics(data)
-      } catch {
-        setMetricsError('Unable to load model performance. Please try again later.')
-      } finally {
-        setMetricsLoading(false)
-      }
-    }
+const featureCards = [
+  { icon: '🛡️', title: 'Spam Detection', description: 'Detect suspicious SMS using TF-IDF features and supervised ML models.', accent: 'blue' },
+  { icon: '⚠️', title: 'Threat Severity', description: 'Assess risk intensity using urgency cues and scam pattern signals.', accent: 'orange' },
+  { icon: '📘', title: 'Explainable Results', description: 'Present clear reasons behind each prediction for better trust and understanding.', accent: 'purple' },
+  { icon: '📊', title: 'Model Comparison', description: 'Compare model performance across logistic regression, Naive Bayes, and SVM.', accent: 'cyan' },
+]
 
-    loadMetrics()
-  }, [])
+const pipelineSteps = [
+  { step: '01', title: 'User Message', text: 'An SMS or text is entered by the user for classification and risk assessment.' },
+  { step: '02', title: 'Text Preprocessing', text: 'Lowercasing, URL masking, number normalization, and cleanup reduce noisy text input.' },
+  { step: '03', title: 'Word + Character TF-IDF', text: 'Features are extracted from both word and character n-grams to capture semantic and stylistic signals.' },
+  { step: '04', title: 'Logistic Regression', text: 'One classifier learns the linear decision boundary for SMS classification.' },
+  { step: '05', title: 'Multinomial Naive Bayes', text: 'This model is efficient for high-dimensional text with strong probability-based scoring.' },
+  { step: '06', title: 'SVM', text: 'Support vector machines optimize the margin for robust classification on sparse TF-IDF features.' },
+  { step: '07', title: 'Model Prediction', text: 'The selected model predicts whether the message is ham or spam.' },
+  { step: '08', title: 'Threat Severity Analysis', text: 'The content is further evaluated for urgency, scam cues, and security risk level.' },
+  { step: '09', title: 'Explainable Result', text: 'The system presents confidence and reasons so the final decision is transparent and interpretable.' },
+]
 
-  async function handleAnalyze() {
-    if (!message.trim()) {
-      setError('Please enter a message to analyze.')
-      setAnalysis(null)
-      return
-    }
+const modelResults = [
+  {
+    model: 'Logistic Regression',
+    accuracy: 98.08,
+    precision: 98.26,
+    recall: 93.84,
+    f1: 96.00,
+    highlight: false,
+  },
+  {
+    model: 'Multinomial Naive Bayes',
+    accuracy: 97.09,
+    precision: 94.71,
+    recall: 93.36,
+    f1: 94.03,
+    highlight: false,
+  },
+  {
+    model: 'SVM',
+    accuracy: 98.60,
+    precision: 98.30,
+    recall: 95.97,
+    f1: 97.12,
+    highlight: true,
+  },
+]
 
-    setLoading(true)
-    setError('')
-    setAnalysis(null)
+function HomePage() {
+  return (
+    <div className="page-section">
+      <section className="hero-section" aria-labelledby="home-title">
+        <div className="eyebrow"><span className="status-dot" /> Message Security Project</div>
+        <h1 id="home-title">
+          <span className="title-line">ML-Based</span>
+          <span className="title-line highlight-line">Spam Message Detection</span>
+          <span className="title-line">&amp; Threat Severity Analysis</span>
+        </h1>
+        <p className="intro">
+          Classify SMS as Ham or Spam and assess threat severity using explainable machine learning.
+        </p>
+        <div className="hero-actions">
+          <Link to="/analyze" className="primary-button">Analyze Message</Link>
+          <Link to="/how-it-works" className="secondary-button">Explore How It Works</Link>
+        </div>
 
-    try {
-      const response = await fetch('http://127.0.0.1:5000/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message }),
-      })
+        <div className="stats-grid" aria-label="Project statistics">
+          {stats.map((stat) => (
+            <article className={`stat-card stat-card-${stat.accent}`} key={stat.label}>
+              <span className="stat-icon" aria-hidden="true">{stat.accent === 'blue' ? '✦' : stat.accent === 'purple' ? '▣' : stat.accent === 'cyan' ? '◌' : '⚑'}</span>
+              <span className="value">{stat.value}</span>
+              <span className="label">{stat.label}</span>
+            </article>
+          ))}
+        </div>
+      </section>
 
-      let data
-      try {
-        data = await response.json()
-      } catch {
-        throw new Error('The analysis service returned an invalid response. Please check that the backend is running and try again.')
-      }
-      if (!response.ok) {
-        throw new Error(data.error || 'The message could not be analyzed.')
-      }
+      <section className="section-header" aria-labelledby="why-it-matters-title">
+        <h2 id="why-it-matters-title">Why This Matters</h2>
+        <p>
+          Spam and scam messages continue to evolve, often using urgency, impersonation, and misleading links to affect
+          users. A practical machine learning system can identify suspicious patterns early and help reduce risk.
+        </p>
+      </section>
 
-      setAnalysis(data)
-    } catch (requestError) {
-      setError(
-        requestError instanceof TypeError
-          ? 'Could not connect to the analysis service. Make sure the backend is running, then try again.'
-          : requestError.message || 'Something went wrong. Please try again.',
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
+      <div className="feature-grid">
+        {featureCards.map((feature) => (
+          <article className={`feature-card feature-card-${feature.accent}`} key={feature.title}>
+            <div className="icon" aria-hidden="true">{feature.icon}</div>
+            <h3>{feature.title}</h3>
+            <p>{feature.description}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
 
-  function handleClear() {
-    setMessage('')
-    setAnalysis(null)
-    setError('')
-  }
+function HowItWorksPage() {
+  return (
+    <div className="page-section">
+      <section className="section-header" aria-labelledby="how-it-works-title">
+        <h2 id="how-it-works-title">How the system works</h2>
+        <p>
+          The platform follows a practical text-classification pipeline, combining feature extraction and multiple ML models
+          to classify spam and assess threat intensity in a fast, explainable workflow.
+        </p>
+      </section>
+
+      <div className="pipeline-layout">
+        <div className="pipeline-row">
+          {pipelineSteps.slice(0, 3).map((step) => (
+            <article className="pipeline-step" key={step.step}>
+              <span className="step-label">{step.step}</span>
+              <h4>{step.title}</h4>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="pipeline-arrow">↓</div>
+
+        <div className="pipeline-row">
+          {pipelineSteps.slice(3, 6).map((step) => (
+            <article className="pipeline-step" key={step.step}>
+              <span className="step-label">{step.step}</span>
+              <h4>{step.title}</h4>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="pipeline-arrow">↓</div>
+
+        <div className="pipeline-row">
+          {pipelineSteps.slice(6, 9).map((step) => (
+            <article className="pipeline-step" key={step.step}>
+              <span className="step-label">{step.step}</span>
+              <h4>{step.title}</h4>
+              <p>{step.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+      <div className="why-block">
+        <h3>Why SVM?</h3>
+        <p>
+          Support Vector Machine performed best on our high-dimensional TF-IDF text features because it builds a strong
+          decision boundary that separates spam and ham messages effectively in sparse, high-dimensional text spaces.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function PerformancePage() {
+  const metrics = [
+    { label: 'Accuracy', value: 98.60, suffix: '%' },
+    { label: 'Precision', value: 98.30, suffix: '%' },
+    { label: 'Recall', value: 95.97, suffix: '%' },
+    { label: 'F1-score', value: 97.12, suffix: '%' },
+  ]
 
   return (
-    <main className="page-shell">
-      <div className="app-container">
+    <div className="page-section">
+      <section className="section-header" aria-labelledby="performance-title">
+        <h2 id="performance-title">Model performance</h2>
+        <p>
+          The final evaluation compares the three classifiers on the test set. SVM is highlighted as the best-performing
+          model for this text classification task.
+        </p>
+      </section>
+
+      <div className="metric-grid">
+        {modelResults.map((item) => (
+          <article className={`metric-card ${item.highlight ? 'highlighted' : ''}`} key={item.model}>
+            <div className="metric-card-header">
+              <h3>{item.model}</h3>
+              {item.highlight && <span className="model-tag highlighted">Best Model</span>}
+            </div>
+            <div className="metric-list">
+              <div className="metric-row"><span className="metric-name">Accuracy</span><span className="metric-value">{item.accuracy.toFixed(2)}%</span></div>
+              <div className="metric-row"><span className="metric-name">Precision</span><span className="metric-value">{item.precision.toFixed(2)}%</span></div>
+              <div className="metric-row"><span className="metric-name">Recall</span><span className="metric-value">{item.recall.toFixed(2)}%</span></div>
+              <div className="metric-row"><span className="metric-name">F1 Score</span><span className="metric-value">{item.f1.toFixed(2)}%</span></div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="summary-grid" style={{ marginTop: '24px' }}>
+        <article className="summary-card">
+          <div className="summary-card-header">
+            <h3>Top performer</h3>
+            <span className="model-tag highlighted">SVM</span>
+          </div>
+          <div className="bar-wrapper">
+            {metrics.map((metric) => (
+              <div className="bar-row" key={metric.label}>
+                <span className="bar-label">{metric.label}</span>
+                <div className="bar-track"><span className="bar-fill svm" style={{ width: `${metric.value}%` }} /></div>
+                <span className="bar-value">{metric.value.toFixed(2)}%</span>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="summary-card">
+          <div className="summary-card-header">
+            <h3>SVM confusion matrix</h3>
+            <span className="model-tag">Prediction breakdown</span>
+          </div>
+          <div className="confusion-box">
+            <div className="confusion-cell">
+              <span>True Negative</span>
+              <strong>1289</strong>
+            </div>
+            <div className="confusion-cell">
+              <span>False Positive</span>
+              <strong>7</strong>
+            </div>
+            <div className="confusion-cell">
+              <span>False Negative</span>
+              <strong>17</strong>
+            </div>
+            <div className="confusion-cell">
+              <span>True Positive</span>
+              <strong>405</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div className="definition-list" style={{ marginTop: '24px' }}>
+        <div className="definition-item">
+          <strong>Accuracy</strong>
+          <p>
+            Accuracy measures how often the model correctly predicts the class overall across all messages in the test set.
+          </p>
+        </div>
+        <div className="definition-item">
+          <strong>Precision</strong>
+          <p>
+            Precision shows how many predicted spam messages were actually spam, which helps gauge false alarms.
+          </p>
+        </div>
+        <div className="definition-item">
+          <strong>Recall</strong>
+          <p>
+            Recall checks how many genuine spam messages were successfully identified, reflecting how well the model catches threats.
+          </p>
+        </div>
+        <div className="definition-item">
+          <strong>F1-score</strong>
+          <p>
+            F1-score balances precision and recall, making it especially useful when the model needs both reliability and sensitivity.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AboutPage() {
+  return (
+    <div className="page-section">
+      <section className="section-header" aria-labelledby="about-title">
+        <h2 id="about-title">About the project</h2>
+        <p>
+          This project was designed as a practical academic ML application for spam detection and risk analysis in mobile text messaging.
+        </p>
+      </section>
+
+      <div className="info-grid">
+        <article className="info-card">
+          <h3>Project objective</h3>
+          <p>
+            The objective is to build a reliable text-classification system that can identify spam messages and flag threat severity
+            using ML-driven reasoning. The system aims to provide actionable insight while remaining transparent and explainable.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Problem statement</h3>
+          <p>
+            Traditional filtering tools often struggle with evolving spam language, fraudulent urgency, and misleading links. This project
+            addresses that challenge by combining multiple models and severity themes to improve detection quality.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Dataset information</h3>
+          <p>
+            The project uses publicly available real-world SMS datasets. The datasets were cleaned and combined, with a small number
+            of manually created examples added for targeted data augmentation.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Dataset source</h3>
+          <p>
+            The project is built from publicly available SMS spam/ham resources and adapted for academic experimentation and model training.
+          </p>
+        </article>
+      </div>
+
+      <div className="info-grid" style={{ marginTop: '18px' }}>
+        <article className="info-card">
+          <h3>Technologies used</h3>
+          <div className="table-list">
+            <div className="table-item"><span>Frontend</span><strong>React, Vite, CSS</strong></div>
+            <div className="table-item"><span>Backend</span><strong>Python, Flask</strong></div>
+            <div className="table-item"><span>Machine Learning</span><strong>Scikit-learn, TF-IDF, Logistic Regression, Multinomial Naive Bayes, SVM</strong></div>
+          </div>
+        </article>
+
+        <article className="info-card">
+          <h3>Feature extraction</h3>
+          <p>
+            The system uses combined word and character TF-IDF representations to capture both vocabulary-based and character-level patterns,
+            which is particularly useful for short and noisy SMS content.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Explainability</h3>
+          <p>
+            Results include prediction confidence and explanation-based reasons to make decisions more understandable to students, end users,
+            and evaluators in a classroom setting.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Threat severity</h3>
+          <p>
+            Threat severity uses a rule-based analysis that emphasizes urgency cues, financial language, verification requests, and scam indicators to classify Low, Medium, or High risk.
+          </p>
+        </article>
+      </div>
+
+      <div className="info-grid" style={{ marginTop: '18px' }}>
+        <article className="info-card">
+          <h3>Limitations</h3>
+          <p>
+            The system is designed for educational and research purposes and may not generalize perfectly to unseen scam patterns or multilingual content.
+          </p>
+        </article>
+
+        <article className="info-card">
+          <h3>Future scope</h3>
+          <p>
+            Future work can include multilingual support, browser-based detection, more advanced explainability, and a larger production-grade threat dataset.
+          </p>
+        </article>
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  const [darkMode, setDarkMode] = useState(false)
+
+  return (
+    <main className={`page-shell ${darkMode ? 'theme-dark' : ''}`}>
+      <div className="app-container app-shell">
         <header className="topbar">
-          <a className="brand" href="/" aria-label="MessageGuard home">
+          <Link className="brand" to="/" aria-label="MessageGuard home">
             <span className="brand-mark" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
                 <path d="M12 3 20 6v5.5c0 4.8-3.3 8-8 9.5-4.7-1.5-8-4.7-8-9.5V6l8-3Z" />
                 <path d="m8.5 12 2.2 2.2 4.8-5" />
               </svg>
             </span>
-            <span>MessageGuard</span>
-          </a>
-          <span className="project-label">ML Project</span>
+            <span className="brand-copy">MessageGuard</span>
+          </Link>
+
+          <nav className="navbar" aria-label="Main navigation">
+            <NavLink to="/" end className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Home
+            </NavLink>
+            <NavLink to="/analyze" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Analyze
+            </NavLink>
+            <NavLink to="/how-it-works" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              How It Works
+            </NavLink>
+            <NavLink to="/performance" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              Model Performance
+            </NavLink>
+            <NavLink to="/about" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              About
+            </NavLink>
+          </nav>
+
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setDarkMode((current) => !current)}
+            aria-label="Toggle theme"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
         </header>
 
-        <section className="hero-section" aria-labelledby="page-title">
-          <div className="eyebrow"><span className="status-dot" /> MESSAGE SECURITY TOOL</div>
-          <h1 id="page-title">ML-Based Scam Message Detection</h1>
-          <p className="intro">
-            This machine learning system analyzes suspicious messages and highlights
-            signals that may indicate a scam.
-          </p>
-
-          <div className="analysis-card">
-            <div className="card-heading">
-              <div>
-                <label htmlFor="message-input">Message to analyze</label>
-                <p>Paste the full text of a message, including any links.</p>
-              </div>
-              <span className="input-badge">TEXT ANALYSIS</span>
-            </div>
-
-            <textarea
-              id="message-input"
-              value={message}
-              onChange={(event) => {
-                setMessage(event.target.value)
-                if (error) setError('')
-              }}
-              placeholder="Example: Your account needs attention. Verify your details at..."
-              rows={8}
-            />
-
-            <div className="card-footer">
-              <span className="character-count">{message.length} characters</span>
-              <div className="action-buttons">
-                <button className="clear-button" type="button" onClick={handleClear} disabled={loading}>
-                  Clear
-                </button>
-                <button
-                  className="analyze-button"
-                  type="button"
-                  onClick={handleAnalyze}
-                  disabled={loading}
-                >
-                  {loading ? 'Analyzing...' : 'Analyze Message'}
-                  <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                    <path d="M4 10h12M10 4l6 6-6 6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {error && <p className="feedback-message error-message" role="alert">{error}</p>}
-          {loading && <p className="feedback-message loading-message" role="status">Analyzing your message...</p>}
-
-          {analysis && (
-            <section
-              className={`result-card prediction-${analysis.prediction.toLowerCase()}`}
-              aria-live="polite"
-              aria-labelledby="result-heading"
-            >
-              <div className="result-header">
-                <div>
-                  <span className="result-kicker">ANALYSIS COMPLETE</span>
-                  <h2 id="result-heading">Message analysis result</h2>
-                </div>
-                <span className={`severity-badge severity-${analysis.severity.toLowerCase()}`}>
-                  {analysis.severity} threat severity
-                </span>
-              </div>
-              <div className="result-summary">
-                <span className="result-label">Prediction</span>
-                <strong className={`prediction-value prediction-value-${analysis.prediction.toLowerCase()}`}>
-                  {analysis.prediction}
-                </strong>
-                <span className="confidence-value">
-                  Confidence: {Number(analysis.confidence).toFixed(2)}%
-                </span>
-                <span className="model-used">Model used: {analysis.model || 'SVM'}</span>
-              </div>
-              <div className="reason-list">
-                <h3>Explanation / Reasons</h3>
-                {analysis.reasons?.length > 0 ? (
-                  <ul>
-                    {analysis.reasons.map((reason, index) => <li key={`${reason}-${index}`}>{reason}</li>)}
-                  </ul>
-                ) : (
-                  <p className="no-reasons">No specific warning signs were detected.</p>
-                )}
-              </div>
-            </section>
-          )}
-
-          <p className="privacy-note">
-            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <path d="M10 2.5 16 5v4.1c0 3.6-2.5 6-6 7.2-3.5-1.2-6-3.6-6-7.2V5l6-2.5Z" />
-              <path d="m7.5 9.8 1.7 1.7 3.5-3.6" />
-            </svg>
-            Your message is analyzed for educational purposes.
-          </p>
-        </section>
-
-        <section className="metrics-section" aria-labelledby="metrics-heading">
-          <div className="metrics-heading">
-            <div>
-              <span className="result-kicker">MODEL EVALUATION</span>
-              <h2 id="metrics-heading">Model Performance</h2>
-            </div>
-            <p>Test set evaluation metrics</p>
-          </div>
-
-          {metricsLoading ? (
-            <p className="metrics-status" role="status">Loading model performance...</p>
-          ) : metricsError ? (
-            <p className="metrics-error" role="alert">{metricsError}</p>
-          ) : (
-            <>
-              <div className="chart-legend" aria-label="Metric legend">
-                <span><i className="legend-swatch accuracy-swatch" />Accuracy</span>
-                <span><i className="legend-swatch precision-swatch" />Precision</span>
-                <span><i className="legend-swatch recall-swatch" />Recall</span>
-                <span><i className="legend-swatch f1-swatch" />F1-score</span>
-              </div>
-              <div className="chart-frame" role="img" aria-label="Grouped bar chart comparing model accuracy, precision, recall, and F1-score from zero to one hundred percent">
-                <div className="chart-y-axis" aria-hidden="true">
-                  {[100, 75, 50, 25, 0].map((tick) => <span key={tick}>{tick}%</span>)}
-                </div>
-                <div className="chart-content">
-                  <div className="chart-plot">
-                    {[100, 75, 50, 25, 0].map((tick) => (
-                      <div className="chart-gridline" key={tick} style={{ bottom: `${tick}%` }} />
-                    ))}
-                    <div className="chart-model-groups">
-                      {metrics.map((metric) => {
-                        const values = [
-                          { name: 'Accuracy', field: 'accuracy', className: 'accuracy-bar' },
-                          { name: 'Precision', field: 'precision', className: 'precision-bar' },
-                          { name: 'Recall', field: 'recall', className: 'recall-bar' },
-                          { name: 'F1-score', field: 'f1_score', className: 'f1-bar' },
-                        ]
-
-                        return (
-                          <div className="chart-model-group" key={metric.Model}>
-                            <div className="chart-bars">
-                              {values.map((value) => {
-                                const percentage = Number(metric[value.field]) * 100
-                                const displayedPercentage = percentage.toFixed(2)
-
-                                return (
-                                  <div className="chart-bar-column" key={value.field}>
-                                    <div
-                                      className={`chart-bar ${value.className}`}
-                                      style={{ height: `${Math.min(100, Math.max(0, percentage))}%` }}
-                                      title={`${value.name}: ${displayedPercentage}%`}
-                                      aria-label={`${metric.Model} ${value.name}: ${displayedPercentage}%`}
-                                    />
-                                  </div>
-                                )
-                              })}
-                            </div>
-                            <span className="chart-model-label">{metric.Model}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {!metricsLoading && !metricsError && (
-            <div className="confusion-section" aria-labelledby="confusion-heading">
-              <div className="confusion-heading">
-                <h3 id="confusion-heading">Confusion Matrix</h3>
-                <p>Correct vs incorrect predictions made on the test set.</p>
-              </div>
-              <div className="breakdown-grid">
-                {metrics.map((item) => {
-                  const matrix = item.confusion_matrix
-                  if (!matrix || matrix.length !== 2) return null
-                  const trueNegative = matrix[0][0]
-                  const falsePositive = matrix[0][1]
-                  const falseNegative = matrix[1][0]
-                  const truePositive = matrix[1][1]
-                  const totalCorrect = trueNegative + truePositive
-                  const totalIncorrect = falsePositive + falseNegative
-                  const totalSamples = totalCorrect + totalIncorrect
-                  const correctPercentage = totalSamples ? (totalCorrect / totalSamples) * 100 : 0
-                  const detailsId = `details-${item.Model.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
-
-                  return (
-                    <article className="breakdown-card" key={`matrix-${item.Model}`}>
-                      <h4>{item.Model}</h4>
-                      <div className="breakdown-summary">
-                        <div className="summary-stat correct-stat">
-                          <span>Correct predictions</span>
-                          <strong>{totalCorrect}</strong>
-                        </div>
-                        <div className="summary-stat incorrect-stat">
-                          <span>Incorrect predictions</span>
-                          <strong>{totalIncorrect}</strong>
-                        </div>
-                      </div>
-                      <div
-                        className="prediction-bar"
-                        role="img"
-                        aria-label={`${totalCorrect} correct predictions and ${totalIncorrect} incorrect predictions out of ${totalSamples} samples`}
-                      >
-                        <span className="prediction-bar-correct" style={{ width: `${correctPercentage}%` }} />
-                        <span className="prediction-bar-incorrect" style={{ width: `${100 - correctPercentage}%` }} />
-                      </div>
-                      <div className="prediction-bar-legend" aria-hidden="true">
-                        <span><i className="bar-legend-correct" />Correct</span>
-                        <span><i className="bar-legend-incorrect" />Incorrect</span>
-                      </div>
-                      <div className="breakdown-totals">
-                        <span>Total samples</span>
-                        <strong>{totalSamples}</strong>
-                      </div>
-                      <button
-                        className="details-button"
-                        type="button"
-                        aria-expanded={Boolean(expandedDetails[item.Model])}
-                        aria-controls={detailsId}
-                        onClick={() => setExpandedDetails((current) => ({
-                          ...current,
-                          [item.Model]: !current[item.Model],
-                        }))}
-                      >
-                        {expandedDetails[item.Model] ? 'Hide details' : 'Details'}
-                      </button>
-                      {expandedDetails[item.Model] && (
-                        <div className="breakdown-details" id={detailsId}>
-                          <div className="detail-group">
-                            <h5>Ham messages</h5>
-                            <p><span>Correctly identified as Ham</span><strong>{trueNegative}</strong></p>
-                            <p><span>Incorrectly marked as Spam</span><strong>{falsePositive}</strong></p>
-                          </div>
-                          <div className="detail-group">
-                            <h5>Spam messages</h5>
-                            <p><span>Correctly identified as Spam</span><strong>{truePositive}</strong></p>
-                            <p><span>Missed as Ham</span><strong>{falseNegative}</strong></p>
-                          </div>
-                        </div>
-                      )}
-                    </article>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </section>
+        <div className="page-body">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/analyze" element={<AnalyzePage />} />
+            <Route path="/how-it-works" element={<HowItWorksPage />} />
+            <Route path="/performance" element={<PerformancePage />} />
+            <Route path="/about" element={<AboutPage />} />
+          </Routes>
+        </div>
 
         <footer className="page-footer">
-          <span>MessageGuard <span className="footer-divider">|</span> Scam awareness project</span>
-          <span>Pause. Check. Stay safe.</span>
+          <div>
+            <strong>MessageGuard</strong>
+            <div>ML-Based Spam Message Detection &amp; Threat Severity Analysis</div>
+          </div>
+          <div className="footer-links">
+            <Link to="/">Home</Link>
+            <Link to="/analyze">Analyze</Link>
+            <Link to="/how-it-works">How It Works</Link>
+            <Link to="/performance">Model Performance</Link>
+            <Link to="/about">About</Link>
+          </div>
+          <div>College project / academic project</div>
         </footer>
       </div>
     </main>
